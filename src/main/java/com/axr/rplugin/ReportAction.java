@@ -8,12 +8,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.terminal.JBTerminalWidget;
-import org.jetbrains.plugins.terminal.ShellTerminalWidget;
-import org.jetbrains.plugins.terminal.TerminalToolWindowFactory;
-import org.jetbrains.plugins.terminal.TerminalView;
+import com.intellij.terminal.ui.TerminalWidget;
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager;
 
 /**
  * @Author xinrui.an
@@ -36,56 +32,28 @@ public class ReportAction extends AnAction {
                 file = FileDocumentManager.getInstance().getFile(editor.getDocument());
             }
         }
-        if (file != null) {
-            // 获取全局路径
-            String fullPath = file.getPath();
-            Messages.showMessageDialog(project, "当前文件全局路径为：\n" + fullPath, "文件路径", Messages.getInformationIcon());
-            
-            // 打开终端并运行命令
-            openTerminalAndRunCommand(project, "ls");
-            
-            // 如果是.rkt文件，还可以添加运行racket的命令
-            if (file.getName().endsWith(".rkt")) {
-                openTerminalAndRunCommand(project, "racket " + fullPath);
-            }
-        } else {
-            Messages.showMessageDialog(project, "未能找到当前文件。", "错误", Messages.getErrorIcon());
-        }
-    }
-    
-    /**
-     * 打开终端并运行指定命令
-     * @param project 当前项目
-     * @param command 要运行的命令
-     */
-    private void openTerminalAndRunCommand(Project project, String command) {
+//        if (file != null) {
+//            // 获取全局路径
+//            String fullPath = file.getPath();
+//            Messages.showMessageDialog(project, "当前文件全局路径为：\n" + fullPath, "文件路径", Messages.getInformationIcon());
+//        } else {
+//            Messages.showMessageDialog(project, "未能找到当前文件。", "错误", Messages.getErrorIcon());
+//        }
+
+
+        // 获取当前项目的 TerminalView 实例
+        TerminalToolWindowManager terminalView = TerminalToolWindowManager.getInstance(project);
+        // 使用项目根目录作为终端的工作目录
+        String workingDirectory = project.getBasePath();
+        // 创建一个新的本地终端标签页，标签标题可以自定义
+        TerminalWidget shellWidget = terminalView.createShellWidget(workingDirectory, "Terminal - ls", true, false);
+        // 执行命令 "ls"（注意：在 Windows 系统下可能需要替换为 dir）
         try {
-            // 获取或打开终端工具窗口
-            ToolWindow terminalToolWindow = ToolWindowManager.getInstance(project).getToolWindow(TerminalToolWindowFactory.TOOL_WINDOW_ID);
-            if (terminalToolWindow != null) {
-                terminalToolWindow.activate(() -> {
-                    try {
-                        // 获取终端视图
-                        TerminalView terminalView = TerminalView.getInstance(project);
-                        // 获取当前终端小部件
-                        ShellTerminalWidget widget = terminalView.getTerminalWidget();
-                        
-                        // 如果没有打开的终端，创建一个新的
-                        if (widget == null) {
-                            widget = terminalView.createLocalShellWidget(project.getBasePath(), "Terminal");
-                        }
-                        
-                        // 运行命令
-                        if (widget != null) {
-                            widget.executeCommand(command);
-                        }
-                    } catch (Exception ex) {
-                        Messages.showErrorDialog(project, "无法在终端中执行命令: " + ex.getMessage(), "错误");
-                    }
-                }, true);
-            }
-        } catch (Exception e) {
-            Messages.showErrorDialog(project, "无法打开终端: " + e.getMessage(), "错误");
+            shellWidget.sendCommandToExecute("ls");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
+        Messages.showMessageDialog("over", "header", Messages.getInformationIcon());
+
     }
 }

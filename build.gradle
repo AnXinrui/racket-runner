@@ -21,7 +21,8 @@ intellij {
     type.set("IC") // Target IDE Platform
     instrumentCode = false
 //    plugins.set(listOf(/* Plugin Dependencies */))
-    plugins = [/* Plugin Dependencies */]
+    plugins = ['org.jetbrains.plugins.terminal']
+
 }
 
 //tasks {
